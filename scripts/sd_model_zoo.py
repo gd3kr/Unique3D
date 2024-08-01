@@ -48,7 +48,7 @@ def load_base_model_components(base_model=DEFAULT_BASE_MODEL, torch_dtype=torch.
         StableDiffusionPipeline,
         **model_kwargs
     )
-    pipe.to("cuda")
+    pipe.to("cpu")
     return pipe.components
 
 @cache_model
