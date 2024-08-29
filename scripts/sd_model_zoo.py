@@ -4,7 +4,8 @@ import torch
 from copy import deepcopy
 
 ENABLE_CPU_CACHE = False
-DEFAULT_BASE_MODEL = "runwayml/stable-diffusion-v1-5"
+# DEFAULT_BASE_MODEL = "runwayml/stable-diffusion-v1-5"
+DEFAULT_BASE_MODEL = "pt-sk/stable-diffusion-1.5"
 
 cached_models = {}  # cache for models to avoid repeated loading, key is model name
 def cache_model(func):
