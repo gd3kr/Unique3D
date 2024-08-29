@@ -6,7 +6,8 @@ from diffusers import StableDiffusionControlNetImg2ImgPipeline, StableDiffusionP
 class MyModelZoo:
     _pipe_disney_controlnet_lineart_ipadapter_i2i: StableDiffusionControlNetImg2ImgPipeline = None
     
-    base_model = "runwayml/stable-diffusion-v1-5"
+    # base_model = "runwayml/stable-diffusion-v1-5"
+    base_model = "pt-sk/stable-diffusion-1.5"
 
     def __init__(self, base_model=None) -> None:
         if base_model is not None:
