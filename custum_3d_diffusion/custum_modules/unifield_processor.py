@@ -70,7 +70,8 @@ class AttnConfig:
     use_mv_joint_attn: bool = False
     
     # for unet
-    init_unet_path: str = "runwayml/stable-diffusion-v1-5"
+    # init_unet_path: str = "runwayml/stable-diffusion-v1-5"
+    init_unet_path: str = "pt-sk/stable-diffusion-1.5"
     init_num_cls_label: int = 0                         # for initialize
     cls_labels: List[int] = field(default_factory=lambda: [])
     cls_label_type: str = "embedding"
