@@ -217,7 +217,7 @@ def srgb_to_linear(c_srgb):
     return c_linear.clip(0, 1.)
 
 
-def save_py3dmesh_with_trimesh_fast(meshes: Meshes, save_glb_path, apply_sRGB_to_LinearRGB=True, normals_as_color=True):
+def save_py3dmesh_with_trimesh_fast(meshes: Meshes, save_glb_path, apply_sRGB_to_LinearRGB=True, normals_as_color=False):
     # convert from pytorch3d meshes to trimesh mesh
     vertices = meshes.verts_packed().cpu().float().numpy()
     triangles = meshes.faces_packed().cpu().long().numpy()
