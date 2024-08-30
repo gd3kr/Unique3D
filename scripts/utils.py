@@ -222,8 +222,8 @@ def save_py3dmesh_with_trimesh_fast(meshes: Meshes, save_glb_path, apply_sRGB_to
     vertices = meshes.verts_packed().cpu().float().numpy()
     triangles = meshes.faces_packed().cpu().long().numpy()
     if normals_as_color:
-        normals = mesh.verts_normals_packed()
-        mesh.textures = TexturesVertex(verts_features=[normals / 2 + 0.5])
+        normals = meshes.verts_normals_packed()
+        meshes.textures = TexturesVertex(verts_features=[normals / 2 + 0.5])
     np_color = meshes.textures.verts_features_packed().cpu().float().numpy()
     
     if save_glb_path.endswith(".glb"):
