@@ -217,11 +217,15 @@ def srgb_to_linear(c_srgb):
     return c_linear.clip(0, 1.)
 
 
-def save_py3dmesh_with_trimesh_fast(meshes: Meshes, save_glb_path, apply_sRGB_to_LinearRGB=True):
+def save_py3dmesh_with_trimesh_fast(meshes: Meshes, save_glb_path, apply_sRGB_to_LinearRGB=True, normals_as_color=True):
     # convert from pytorch3d meshes to trimesh mesh
     vertices = meshes.verts_packed().cpu().float().numpy()
     triangles = meshes.faces_packed().cpu().long().numpy()
+    if normals_as_color:
+        normals = mesh.verts_normals_packed()
+        mesh.textures = TexturesVertex(verts_features=[normals / 2 + 0.5])
     np_color = meshes.textures.verts_features_packed().cpu().float().numpy()
+    
     if save_glb_path.endswith(".glb"):
         # rotate 180 along +Y
         vertices[:, [0, 2]] = -vertices[:, [0, 2]]
@@ -240,50 +244,17 @@ def save_py3dmesh_with_trimesh_fast(meshes: Meshes, save_glb_path, apply_sRGB_to
     print(f"saving to {save_glb_path}")
 
 
-# def save_glb_and_video(save_mesh_prefix: str, meshes: Meshes, with_timestamp=True, dist=3.5, azim_offset=180, resolution=512, fov_in_degrees=1 / 1.15, cam_type="ortho", view_padding=60, export_video=True) -> Tuple[str, str]:
-#     import time
-#     if '.' in save_mesh_prefix:
-#         save_mesh_prefix = ".".join(save_mesh_prefix.split('.')[:-1])
-#     if with_timestamp:
-#         save_mesh_prefix = save_mesh_prefix + f"_{int(time.time())}"
-#     ret_mesh = save_mesh_prefix + ".glb"
-#     # optimizied version
-#     save_py3dmesh_with_trimesh_fast(meshes, ret_mesh)
-#     return ret_mesh, None
-
-import os
-def save_glb_and_video(output_dir, meshes, with_timestamp=True, dist=3.5, fov_in_degrees=2 / 1.35, cam_type="ortho", export_video=True, export_textures=True):
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
+def save_glb_and_video(save_mesh_prefix: str, meshes: Meshes, with_timestamp=True, dist=3.5, azim_offset=180, resolution=512, fov_in_degrees=1 / 1.15, cam_type="ortho", view_padding=60, export_video=True) -> Tuple[str, str]:
+    import time
+    if '.' in save_mesh_prefix:
+        save_mesh_prefix = ".".join(save_mesh_prefix.split('.')[:-1])
     if with_timestamp:
-        import datetime
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_name = f"{timestamp}"
-    else:
-        output_name = "output"
+        save_mesh_prefix = save_mesh_prefix + f"_{int(time.time())}"
+    ret_mesh = save_mesh_prefix + ".glb"
+    # optimizied version
+    save_py3dmesh_with_trimesh_fast(meshes, ret_mesh)
+    return ret_mesh, None
 
-    mesh_path = os.path.join(output_dir, f"{output_name}.glb")
-    save_py3dmesh_with_trimesh_fast(meshes, mesh_path)
-    # meshes.extend_tensor(meshes.verts_padded())
-    # meshes.export(mesh_path)
-
-    if export_textures:
-        rgb_texture = meshes.textures.maps_padded()[0][0].permute(1, 2, 0).cpu().numpy()
-        normal_texture = meshes.textures.maps_padded()[1][0].permute(1, 2, 0).cpu().numpy()
-
-        rgb_image = Image.fromarray((rgb_texture * 255).astype('uint8'))
-        normal_image = Image.fromarray((normal_texture * 255).astype('uint8'))
-
-        print("saving textures...")
-        rgb_image.save(os.path.join(output_dir, f"{output_name}_rgb.png"))
-        normal_image.save(os.path.join(output_dir, f"{output_name}_normal.png"))
-
-    if export_video:
-        video_path = os.path.join(output_dir, f"{output_name}.mp4")
-        meshes.export_animation(video_path, dist=dist, fov_in_degrees=fov_in_degrees, cam_type=cam_type)
-
-    return mesh_path, video_path if export_video else None
 
 # def save_with_py3dmesh(meshes: Meshes):
 #     # import IO from pytorch3d
