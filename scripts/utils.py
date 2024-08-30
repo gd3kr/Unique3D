@@ -264,8 +264,9 @@ def save_glb_and_video(output_dir, meshes, with_timestamp=True, dist=3.5, fov_in
         output_name = "output"
 
     mesh_path = os.path.join(output_dir, f"{output_name}.glb")
-    meshes.extend_tensor(meshes.verts_padded())
-    meshes.export(mesh_path)
+    save_py3dmesh_with_trimesh_fast(meshes, mesh_path)
+    # meshes.extend_tensor(meshes.verts_padded())
+    # meshes.export(mesh_path)
 
     if export_textures:
         rgb_texture = meshes.textures.maps_padded()[0][0].permute(1, 2, 0).cpu().numpy()
