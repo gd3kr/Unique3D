@@ -41,7 +41,7 @@ def run_sr_fast(source_pils, scale=4):
         img = np.array(img_pils)
         if np_in:
             img_pils = Image.fromarray(img)
-        img_pils.save(f"/tmp_pics/sr_img_{idx}.png")
+        img_pils.save(f"/tmp/sr_img_{idx}.png")
     from scripts.upsampler import RealESRGANer
     global SR_cache
     if SR_cache is not None:
