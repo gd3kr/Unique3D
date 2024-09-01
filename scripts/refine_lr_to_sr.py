@@ -29,6 +29,15 @@ def refine_lr_with_sd(pil_image_list, concept_img_list, control_image_list, prom
 SR_cache = None
 
 def run_sr_fast(source_pils, scale=4):
+    print("running super resolution on images")
+    # save images to disk
+    for idx, img_pils in enumerate(source_pils):
+        np_in = isinstance(img_pils, np.ndarray)
+        assert isinstance(img_pils, (Image.Image, np.ndarray))
+        img = np.array(img_pils)
+        if np_in:
+            img_pils = Image.fromarray(img)
+        img_pils.save(f"/tmp_pics/sr_img_{idx}.png")
     from PIL import Image
     from scripts.upsampler import RealESRGANer
     import numpy as np

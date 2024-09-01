@@ -61,34 +61,50 @@ def erode_alpha(img_list):
     return out_img_list
 import time
 def geo_reconstruct(rgb_pils, normal_pils, front_pil, do_refine=False, predict_normal=True, expansion_weight=0.1, init_type="std"):
+    import os
+    os.makedirs("/intermediate", exist_ok=True)
+
     start_time = time.time()
     if front_pil.size[0] <= 512:
         front_pil = run_sr_fast([front_pil])[0]
+        front_pil.save("/intermediate/front_pil_sr.png")
     if do_refine:
         print("Refining RGB images...")
         refine_start_time = time.time()
         refined_rgbs = refine_rgb(rgb_pils, front_pil)  # 6s
+        for i, rgb in enumerate(refined_rgbs):
+            rgb.save(f"/intermediate/refined_rgb_{i}.png")
         refine_end_time = time.time()
         print(f"Refining RGB images took {refine_end_time - refine_start_time:.2f} seconds")
     else:
         refined_rgbs = [rgb.resize((512, 512), resample=Image.LANCZOS) for rgb in rgb_pils]
+        for i, rgb in enumerate(refined_rgbs):
+            rgb.save(f"/intermediate/resized_rgb_{i}.png")
     img_list = [front_pil] + run_sr_fast(refined_rgbs[1:])
+    for i, img in enumerate(img_list):
+        img.save(f"/intermediate/img_list_{i}.png")
     
     if predict_normal:
         print("Predicting normals...")
         predict_normal_start_time = time.time()
         rm_normals = predict_normals([img.resize((512, 512), resample=Image.LANCZOS) for img in img_list], guidance_scale=1.5)
+        for i, img in enumerate(rm_normals):
+            img.save(f"/intermediate/rm_normal_{i}.png")
         predict_normal_end_time = time.time()
         print(f"Predicting normals took {predict_normal_end_time - predict_normal_start_time:.2f} seconds")
     else:
         rm_normals = simple_remove([img.resize((512, 512), resample=Image.LANCZOS) for img in normal_pils])
+        for i, img in enumerate(rm_normals):
+            img.save(f"/intermediate/simple_remove_{i}.png")
     # transfer the alpha channel of rm_normals to img_list
     for idx, img in enumerate(rm_normals):
         if idx == 0 and img_list[0].mode == "RGBA":
             temp = img_list[0].resize((2048, 2048))
             rm_normals[0] = Image.fromarray(np.concatenate([np.array(rm_normals[0])[:, :, :3], np.array(temp)[:, :, 3:4]], axis=-1))
+            # rm_normals[0].save("/intermediate/rm_normal_0_alpha.png")
             continue
         img_list[idx] = Image.fromarray(np.concatenate([np.array(img_list[idx]), np.array(img)[:, :, 3:4]], axis=-1))
+        # img_list[idx].save(f"/intermediate/img_list_{idx}_alpha.png")
     assert img_list[0].mode == "RGBA"
     assert np.mean(np.array(img_list[0])[..., 3]) < 250
     
