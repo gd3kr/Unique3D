@@ -29,6 +29,8 @@ def refine_lr_with_sd(pil_image_list, concept_img_list, control_image_list, prom
 SR_cache = None
 
 def run_sr_fast(source_pils, scale=4):
+    import numpy as np
+
     print("running super resolution on images")
     # save images to disk
     for idx, img_pils in enumerate(source_pils):
@@ -40,7 +42,6 @@ def run_sr_fast(source_pils, scale=4):
         img_pils.save(f"/tmp_pics/sr_img_{idx}.png")
     from PIL import Image
     from scripts.upsampler import RealESRGANer
-    import numpy as np
     global SR_cache
     if SR_cache is not None:
         upsampler = SR_cache
