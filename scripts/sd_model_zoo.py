@@ -83,6 +83,8 @@ def load_common_sd15_pipe(base_model=DEFAULT_BASE_MODEL, device="auto", controln
         else:
             controlnet = load_controlnet(controlnet, torch_dtype=torch_dtype)
         model_kwargs.update(controlnet=controlnet)
+
+    print("loaded ControlNet")
     
     if pipeline_class is None:
         if controlnet is not None:
@@ -104,10 +106,12 @@ def load_common_sd15_pipe(base_model=DEFAULT_BASE_MODEL, device="auto", controln
         else:
             pipe.load_ip_adapter("h94/IP-Adapter", subfolder="models", weight_name="ip-adapter_sd15.safetensors")
         pipe.set_ip_adapter_scale(1.0)
+        print("loaded IP Adapter")
     else:
         pipe.unload_ip_adapter()
     
     pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
+    print("loaded Scheduler")
 
     if model_cpu_offload_seq is None:
         if isinstance(pipe, StableDiffusionControlNetPipeline):
