@@ -61,16 +61,25 @@ def erode_alpha(img_list):
     return out_img_list
 import time
 def geo_reconstruct(rgb_pils, normal_pils, front_pil, do_refine=False, predict_normal=True, expansion_weight=0.1, init_type="std"):
+    start_time = time.time()
     if front_pil.size[0] <= 512:
         front_pil = run_sr_fast([front_pil])[0]
     if do_refine:
+        print("Refining RGB images...")
+        refine_start_time = time.time()
         refined_rgbs = refine_rgb(rgb_pils, front_pil)  # 6s
+        refine_end_time = time.time()
+        print(f"Refining RGB images took {refine_end_time - refine_start_time:.2f} seconds")
     else:
         refined_rgbs = [rgb.resize((512, 512), resample=Image.LANCZOS) for rgb in rgb_pils]
     img_list = [front_pil] + run_sr_fast(refined_rgbs[1:])
     
     if predict_normal:
+        print("Predicting normals...")
+        predict_normal_start_time = time.time()
         rm_normals = predict_normals([img.resize((512, 512), resample=Image.LANCZOS) for img in img_list], guidance_scale=1.5)
+        predict_normal_end_time = time.time()
+        print(f"Predicting normals took {predict_normal_end_time - predict_normal_start_time:.2f} seconds")
     else:
         rm_normals = simple_remove([img.resize((512, 512), resample=Image.LANCZOS) for img in normal_pils])
     # transfer the alpha channel of rm_normals to img_list
@@ -86,13 +95,39 @@ def geo_reconstruct(rgb_pils, normal_pils, front_pil, do_refine=False, predict_n
     img_list = [img_list[0]] + erode_alpha(img_list[1:])
     normal_stg1 = [img.resize((512, 512)) for img in rm_normals]
     if init_type in ["std", "thin"]:
+        print("Initializing mesh...")
+        init_mesh_start_time = time.time()
         meshes = fast_geo(normal_stg1[0], normal_stg1[2], normal_stg1[1], init_type=init_type)
+        init_mesh_end_time = time.time()
+        print(f"Initializing mesh took {init_mesh_end_time - init_mesh_start_time:.2f} seconds")
         _ = multiview_color_projection(meshes, rgb_pils, resolution=512, device="cuda", complete_unseen=False, confidence_threshold=0.1)    # just check for validation, may throw error
         vertices, faces, _ = from_py3d_mesh(meshes)
+        print("Reconstructing stage 1...")
+        reconstruct_stage1_start_time = time.time()
         vertices, faces = reconstruct_stage1(normal_stg1, steps=200, vertices=vertices, faces=faces, start_edge_len=0.1, end_edge_len=0.02, gain=0.05, return_mesh=False, loss_expansion_weight=expansion_weight)
+        reconstruct_stage1_end_time = time.time()
+        print(f"Reconstructing stage 1 took {reconstruct_stage1_end_time - reconstruct_stage1_start_time:.2f} seconds")
     elif init_type in ["ball"]:
+        print("Reconstructing stage 1...")
+        reconstruct_stage1_start_time = time.time()
         vertices, faces = reconstruct_stage1(normal_stg1, steps=200, end_edge_len=0.01, return_mesh=False, loss_expansion_weight=expansion_weight)
+        reconstruct_stage1_end_time = time.time()
+        print(f"Reconstructing stage 1 took {reconstruct_stage1_end_time - reconstruct_stage1_start_time:.2f} seconds")
+    print("Refining mesh...")
+    refine_mesh_start_time = time.time()
     vertices, faces = run_mesh_refine(vertices, faces, rm_normals, steps=100, start_edge_len=0.02, end_edge_len=0.005, decay=0.99, update_normal_interval=20, update_warmup=5, return_mesh=False, process_inputs=False, process_outputs=False)
+    refine_mesh_end_time = time.time()
+    print(f"Refining mesh took {refine_mesh_end_time - refine_mesh_start_time:.2f} seconds")
+    print("Cleaning mesh...")
+    clean_mesh_start_time = time.time()
     meshes = simple_clean_mesh(to_pyml_mesh(vertices, faces), apply_smooth=True, stepsmoothnum=1, apply_sub_divide=True, sub_divide_threshold=0.25).to("cuda")
+    clean_mesh_end_time = time.time()
+    print(f"Cleaning mesh took {clean_mesh_end_time - clean_mesh_start_time:.2f} seconds")
+    print("Projecting color...")
+    project_color_start_time = time.time()
     new_meshes = multiview_color_projection(meshes, img_list, resolution=1024, device="cuda", complete_unseen=True, confidence_threshold=0.2, cameras_list = get_cameras_list([0, 90, 180, 270], "cuda", focal=1))
+    project_color_end_time = time.time()
+    print(f"Projecting color took {project_color_end_time - project_color_start_time:.2f} seconds")
+    end_time = time.time()
+    print(f"Total time taken: {end_time - start_time:.2f} seconds")
     return new_meshes
