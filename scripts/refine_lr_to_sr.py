@@ -30,6 +30,8 @@ SR_cache = None
 
 def run_sr_fast(source_pils, scale=4):
     import numpy as np
+    from PIL import Image
+
 
     print("running super resolution on images")
     # save images to disk
@@ -40,7 +42,6 @@ def run_sr_fast(source_pils, scale=4):
         if np_in:
             img_pils = Image.fromarray(img)
         img_pils.save(f"/tmp_pics/sr_img_{idx}.png")
-    from PIL import Image
     from scripts.upsampler import RealESRGANer
     global SR_cache
     if SR_cache is not None:
