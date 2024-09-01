@@ -17,7 +17,7 @@ class MyModelZoo:
     def pipe_disney_controlnet_tile_ipadapter_i2i(self):
         return self._pipe_disney_controlnet_lineart_ipadapter_i2i
     
-    def init_models(self):
-        self._pipe_disney_controlnet_lineart_ipadapter_i2i = load_common_sd15_pipe(base_model=self.base_model, ip_adapter=True, plus_model=False, controlnet="./ckpt/controlnet-tile", pipeline_class=StableDiffusionControlNetImg2ImgPipeline)
+    def init_models(self, load_models_onto_gpu=True):
+        self._pipe_disney_controlnet_lineart_ipadapter_i2i = load_common_sd15_pipe(base_model=self.base_model, ip_adapter=True, plus_model=False, controlnet="./ckpt/controlnet-tile",load_model_onto_gpu=load_models_onto_gpu, pipeline_class=StableDiffusionControlNetImg2ImgPipeline)
 
 model_zoo = MyModelZoo()
