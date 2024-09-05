@@ -28,6 +28,7 @@ def refine_lr_with_sd(pil_image_list, concept_img_list, control_image_list, prom
 
 SR_cache = None
 
+
 def run_sr_fast(source_pils, scale=4):
     import numpy as np
     from PIL import Image
