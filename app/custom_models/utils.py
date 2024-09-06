@@ -73,7 +73,7 @@ def load_pipeline(config_path, ckpt_path, pipeline_filter=lambda x: True, weight
             pipeline = trainer.construct_pipeline(shared_modules, configurable_unet.unet)
             pipeline.set_progress_bar_config(disable=False)
             trainer_out = trainer
-            
+
     pipeline = pipeline.to(device)
 
 
@@ -94,6 +94,8 @@ def load_pipeline(config_path, ckpt_path, pipeline_filter=lambda x: True, weight
     # For StableVideoDiffusionPipeline it is not needed.
     config.enable_cuda_graph = True
 
+    print("compiling model")
     pipeline = compile(pipeline, config)
+    print("model compiled")
 
     return trainer_out, pipeline

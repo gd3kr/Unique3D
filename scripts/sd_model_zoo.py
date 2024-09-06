@@ -69,9 +69,13 @@ def load_base_model_components(base_model=DEFAULT_BASE_MODEL, torch_dtype=torch.
     # CUDA Graph is suggested for small batch sizes and small resolutions to reduce CPU overhead.
     # But it can increase the amount of GPU memory used.
     # For StableVideoDiffusionPipeline it is not needed.
+
     config.enable_cuda_graph = True
 
+    print("compiling model")
     pipe = compile(pipe, config)
+    print("model compiled")
+
 
     return pipe.components
 
