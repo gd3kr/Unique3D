@@ -7,6 +7,8 @@ from custum_3d_diffusion import modules
 from custum_3d_diffusion.custum_modules.unifield_processor import AttnConfig, ConfigurableUNet2DConditionModel
 from custum_3d_diffusion.trainings.base import BasicTrainer
 from custum_3d_diffusion.trainings.utils import load_config
+from sfast.compilers.diffusion_pipeline_compiler import (compile,
+                                                         CompilationConfig)
 
 
 @dataclass
@@ -71,5 +73,27 @@ def load_pipeline(config_path, ckpt_path, pipeline_filter=lambda x: True, weight
             pipeline = trainer.construct_pipeline(shared_modules, configurable_unet.unet)
             pipeline.set_progress_bar_config(disable=False)
             trainer_out = trainer
+            
     pipeline = pipeline.to(device)
+
+
+    config = CompilationConfig.Default()
+    # xformers and Triton are suggested for achieving best performance.
+    try:
+        import xformers
+        config.enable_xformers = True
+    except ImportError:
+        print('xformers not installed, skip')
+    try:
+        import triton
+        config.enable_triton = True
+    except ImportError:
+        print('Triton not installed, skip')
+    # CUDA Graph is suggested for small batch sizes and small resolutions to reduce CPU overhead.
+    # But it can increase the amount of GPU memory used.
+    # For StableVideoDiffusionPipeline it is not needed.
+    config.enable_cuda_graph = True
+
+    pipeline = compile(pipeline, config)
+
     return trainer_out, pipeline
