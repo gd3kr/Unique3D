@@ -2,6 +2,8 @@ from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, EulerA
 from transformers import CLIPVisionModelWithProjection
 import torch
 from copy import deepcopy
+from sfast.compilers.diffusion_pipeline_compiler import (compile,
+                                                         CompilationConfig)
 
 ENABLE_CPU_CACHE = False
 # DEFAULT_BASE_MODEL = "runwayml/stable-diffusion-v1-5"
@@ -49,7 +51,28 @@ def load_base_model_components(base_model=DEFAULT_BASE_MODEL, torch_dtype=torch.
         StableDiffusionPipeline,
         **model_kwargs
     )
+
     pipe.to("cuda")
+
+    config = CompilationConfig.Default()
+    # xformers and Triton are suggested for achieving best performance.
+    try:
+        import xformers
+        config.enable_xformers = True
+    except ImportError:
+        print('xformers not installed, skip')
+    try:
+        import triton
+        config.enable_triton = True
+    except ImportError:
+        print('Triton not installed, skip')
+    # CUDA Graph is suggested for small batch sizes and small resolutions to reduce CPU overhead.
+    # But it can increase the amount of GPU memory used.
+    # For StableVideoDiffusionPipeline it is not needed.
+    config.enable_cuda_graph = True
+
+    pipe = compile(pipe, config)
+
     return pipe.components
 
 @cache_model
