@@ -137,8 +137,7 @@ def load_common_sd15_pipe(base_model=DEFAULT_BASE_MODEL, device="auto", controln
     if vae_slicing:
         pipe.enable_vae_slicing()
         
-    import gc
-    gc.collect()
+    pipe = pipe.to("cuda")
 
     config = CompilationConfig.Default()
     # xformers and Triton are suggested for achieving best performance.
@@ -161,6 +160,10 @@ def load_common_sd15_pipe(base_model=DEFAULT_BASE_MODEL, device="auto", controln
     print("compiling model")
     pipe = compile(pipe, config)
     print("model compiled")
+
+
+    import gc
+    gc.collect()
 
     return pipe
 
