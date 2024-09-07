@@ -137,7 +137,7 @@ def load_common_sd15_pipe(base_model=DEFAULT_BASE_MODEL, device="auto", controln
     if vae_slicing:
         pipe.enable_vae_slicing()
         
-    pipe = pipe.to("cuda")
+    pipe.to("cuda")
 
     config = CompilationConfig.Default()
     # xformers and Triton are suggested for achieving best performance.
