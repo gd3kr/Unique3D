@@ -19,6 +19,8 @@ providers = [
 def load_onnx(file_path: str):
     assert file_path.endswith(".onnx")
     sess_opt = onnxruntime.SessionOptions()
+    print("Loading ONNX model from", file_path)
+    print("Using providers:", providers)
     ort_session = onnxruntime.InferenceSession(file_path, sess_opt=sess_opt, providers=providers)
     return ort_session
 
