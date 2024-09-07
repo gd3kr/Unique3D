@@ -8,17 +8,17 @@ numba
 numpy
 git+https://github.com/NVlabs/nvdiffrast.git
 omegaconf>=2.3.0
-# onnxruntime_gpu
+onnxruntime_gpu
 opencv_python
 opencv_python_headless
-# ort_nightly_gpu
+ort_nightly_gpu
 peft
 Pillow
 pygltflib
 pymeshlab>=2023.12
-# git+https://github.com/facebookresearch/pytorch3d.git@stable
+git+https://github.com/facebookresearch/pytorch3d.git@stable
 rembg[gpu]
-#torch>=2.0.1
+torch>=2.0.1
 torch_scatter
 tqdm
 transformers
