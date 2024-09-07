@@ -62,9 +62,10 @@ def run_sr_fast(source_pils, scale=4, model_name="realesrgan-x4plus"):
         realesrgan_path,
         "-i", "/intermediate",
         "-o", "/intermediate/output",
-        "-n", model_name,
+        # "-n", model_name,
         "-s", str(scale),
-        "-f", "png"
+        "-f", "png",
+        "-v"
     ]
     
     try:
