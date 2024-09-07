@@ -7,8 +7,8 @@ from custum_3d_diffusion import modules
 from custum_3d_diffusion.custum_modules.unifield_processor import AttnConfig, ConfigurableUNet2DConditionModel
 from custum_3d_diffusion.trainings.base import BasicTrainer
 from custum_3d_diffusion.trainings.utils import load_config
-from sfast.compilers.diffusion_pipeline_compiler import (compile,
-                                                         CompilationConfig)
+# from sfast.compilers.diffusion_pipeline_compiler import (compile,
+#                                                          CompilationConfig)
 
 
 @dataclass

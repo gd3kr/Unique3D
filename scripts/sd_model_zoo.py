@@ -2,8 +2,8 @@ from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, EulerA
 from transformers import CLIPVisionModelWithProjection
 import torch
 from copy import deepcopy
-from sfast.compilers.diffusion_pipeline_compiler import (compile,
-                                                         CompilationConfig)
+# from sfast.compilers.diffusion_pipeline_compiler import (compile,
+#                                                          CompilationConfig)
 
 ENABLE_CPU_CACHE = False
 # DEFAULT_BASE_MODEL = "runwayml/stable-diffusion-v1-5"
