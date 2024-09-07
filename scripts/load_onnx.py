@@ -2,12 +2,12 @@ import onnxruntime
 import torch
 
 providers = [
-    # ('TensorrtExecutionProvider', {
-    #     'device_id': 0,
-    #     'trt_max_workspace_size': 8 * 1024 * 1024 * 1024,
-    #     'trt_fp16_enable': True,
-    #     'trt_engine_cache_enable': True,
-    # }),
+    ('TensorrtExecutionProvider', {
+        'device_id': 0,
+        'trt_max_workspace_size': 8 * 1024 * 1024 * 1024,
+        'trt_fp16_enable': True,
+        'trt_engine_cache_enable': True,
+    }),
     ('CUDAExecutionProvider', {
         'device_id': 0,
         'arena_extend_strategy': 'kSameAsRequested',
