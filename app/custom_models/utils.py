@@ -74,7 +74,7 @@ def load_pipeline(config_path, ckpt_path, pipeline_filter=lambda x: True, weight
             pipeline.set_progress_bar_config(disable=False)
             trainer_out = trainer
 
-    pipeline = pipeline.to(device)
+    pipeline = pipeline.to(device, dtype=weight_dtype)
 
 
     config = CompilationConfig.Default()
