@@ -54,6 +54,8 @@ def process_text(trainer, pipeline, img, guidance_scale=2.):
 
 
 def load_pipeline(config_path, ckpt_path, pipeline_filter=lambda x: True, weight_dtype = torch.bfloat16):
+
+    weight_dtype = torch.float16
     # print what is loading
     print(f"loading pipeline from {config_path} and {ckpt_path}")
 
