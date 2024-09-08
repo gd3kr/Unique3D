@@ -4,7 +4,7 @@ import torch
 providers = [
     ('TensorrtExecutionProvider', {
         'device_id': 0,
-        'trt_max_workspace_size': 10 * 1024 * 1024 * 1024,
+        'trt_max_workspace_size': 32 * 1024 * 1024 * 1024,
         'trt_fp16_enable': True,
         'trt_engine_cache_enable': True,
     }),
