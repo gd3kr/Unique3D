@@ -10,9 +10,6 @@ from custum_3d_diffusion.trainings.utils import load_config
 # from sfast.compilers.diffusion_pipeline_compiler import (compile,
 #                                                          CompilationConfig)
 
-from perflow.src.utils_perflow import merge_delta_weights_into_unet
-from perflow.src.scheduler_perflow import PeRFlowScheduler
-
 
 @dataclass
 class FakeAccelerator:
@@ -54,8 +51,6 @@ def process_text(trainer, pipeline, img, guidance_scale=2.):
 
 
 def load_pipeline(config_path, ckpt_path, pipeline_filter=lambda x: True, weight_dtype = torch.bfloat16):
-
-    weight_dtype = torch.float16
     # print what is loading
     print(f"loading pipeline from {config_path} and {ckpt_path}")
 
@@ -72,20 +67,6 @@ def load_pipeline(config_path, ckpt_path, pipeline_filter=lambda x: True, weight
         state_dict = torch.load(load_from_checkpoint)
         configurable_unet.unet.load_state_dict(state_dict, strict=False)
     # Move unet, vae and text_encoder to device and cast to weight_dtype
-
-
-    print("loading delta weights...")
-    delta_weights = UNet2DConditionModel.from_pretrained("hansyan/perflow-sd15-delta-weights", torch_dtype=weight_dtype, variant="v0-1",).state_dict()
-    print("delta weights loaded...")
-
-    unet_weights = configurable_unet.unet.state_dict()
-    assert unet_weights.keys() == delta_weights.keys()
-    for key in delta_weights.keys():
-        dtype = unet_weights[key].dtype
-        unet_weights[key] = unet_weights[key].to(dtype=delta_weights[key].dtype) + delta_weights[key].to(device=unet_weights[key].device)
-        unet_weights[key] = unet_weights[key].to(dtype)
-    configurable_unet.unet.load_state_dict(unet_weights, strict=True)
-
     configurable_unet.unet.to(device, dtype=weight_dtype)
 
     pipeline = None
@@ -95,13 +76,6 @@ def load_pipeline(config_path, ckpt_path, pipeline_filter=lambda x: True, weight
             pipeline = trainer.construct_pipeline(shared_modules, configurable_unet.unet)
             pipeline.set_progress_bar_config(disable=False)
             trainer_out = trainer
-
-
-    pipeline.scheduler = PeRFlowScheduler.from_config(pipeline.scheduler.config, prediction_type="diff_eps", num_time_windows=4)
-
-    print("pipeline constructed\n\n")
-    print(pipeline)
-
 
     pipeline = pipeline.to(device, dtype=weight_dtype)
 

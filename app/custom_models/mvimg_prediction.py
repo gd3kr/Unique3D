@@ -9,9 +9,22 @@ from app.custom_models.utils import load_pipeline
 from scripts.all_typing import *
 from scripts.utils import session, simple_preprocess
 
+from perflow.src.utils_perflow import merge_delta_weights_into_unet
+from perflow.src.scheduler_perflow import PeRFlowScheduler
+from diffusers import UNet2DConditionModel
+
+
+
 training_config = "app/custom_models/image2mvimage.yaml"
 checkpoint_path = "ckpt/img2mvimg/unet_state_dict.pth"
 trainer, pipeline = load_pipeline(training_config, checkpoint_path)
+
+# merge delta weights into unet
+delta_weights = UNet2DConditionModel.from_pretrained("hansyan/perflow-sd15-delta-weights", torch_dtype=torch.bfloat16, variant="v0-1",).state_dict()
+pipeline = merge_delta_weights_into_unet(pipeline, delta_weights)
+pipeline.scheduler = PeRFlowScheduler.from_config(pipeline.scheduler.config, prediction_type="diff_eps", num_time_windows=4)
+
+
 # pipeline.enable_model_cpu_offload()
 
 def predict(img_list: List[Image.Image], guidance_scale=2., **kwargs):
