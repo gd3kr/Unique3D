@@ -103,17 +103,6 @@ def run_sr_fast(source_pils, scale=4):
 
     print("running super resolution on images")
     # save images to disk
-    for idx, img_pils in enumerate(source_pils):
-        np_in = isinstance(img_pils, np.ndarray)
-        assert isinstance(img_pils, (Image.Image, np.ndarray))
-        img = np.array(img_pils)
-        if np_in:
-            img_pils = Image.fromarray(img)
-        try:
-            os.makedirs("/intermediate", exist_ok=True)
-        except:
-            pass
-        img_pils.save(f"/intermediate/sr_img_{idx}.png")
     from scripts.upsampler import RealESRGANer
     global SR_cache
     if SR_cache is not None:
