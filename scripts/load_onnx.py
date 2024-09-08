@@ -5,16 +5,16 @@ import threading
 import time
 
 providers = [
-    ('TensorrtExecutionProvider', {
-        'device_id': 0,
-        'trt_max_workspace_size': 32 * 1024 * 1024 * 1024,
-        'trt_fp16_enable': True,
-        'trt_engine_cache_enable': True,
-    }),
+    # ('TensorrtExecutionProvider', {
+    #     'device_id': 0,
+    #     'trt_max_workspace_size': 32 * 1024 * 1024 * 1024,
+    #     'trt_fp16_enable': True,
+    #     'trt_engine_cache_enable': True,
+    # }),
     ('CUDAExecutionProvider', {
         'device_id': 0,
         'arena_extend_strategy': 'kSameAsRequested',
-        'gpu_mem_limit': 10 * 1024 * 1024 * 1024,
+        'gpu_mem_limit': 24 * 1024 * 1024 * 1024,
         'cudnn_conv_algo_search': 'HEURISTIC',
     })
 ]
