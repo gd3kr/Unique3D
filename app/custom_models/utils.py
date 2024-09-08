@@ -72,7 +72,7 @@ def load_pipeline(config_path, ckpt_path, pipeline_filter=lambda x: True, weight
     # Move unet, vae and text_encoder to device and cast to weight_dtype
 
 
-    configurable_unet.unet.to(device, dtype=weight_dtype)
+    # configurable_unet.unet.to(device, dtype=weight_dtype)
 
     pipeline = None
     trainer_out = None
@@ -84,11 +84,12 @@ def load_pipeline(config_path, ckpt_path, pipeline_filter=lambda x: True, weight
 
 
     print("loading delta weights...")
-    delta_weights = UNet2DConditionModel.from_pretrained("hansyan/perflow-sd15-delta-weights", torch_dtype=torch.float16, variant="v0-1",).state_dict()
+    delta_weights = UNet2DConditionModel.from_pretrained("hansyan/perflow-sd15-delta-weights", torch_dtype=weight_dtype, variant="v0-1",).state_dict()
     print("delta weights loaded...")
 
     pipeline = merge_delta_weights_into_unet(pipeline, delta_weights)
     pipeline.scheduler = PeRFlowScheduler.from_config(pipeline.scheduler.config, prediction_type="diff_eps", num_time_windows=4)
+
 
     pipeline = pipeline.to(device, dtype=weight_dtype)
 

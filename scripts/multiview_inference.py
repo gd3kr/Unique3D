@@ -68,35 +68,35 @@ def geo_reconstruct(rgb_pils, normal_pils, front_pil, do_refine=False, predict_n
     start_time = time.time()
     if front_pil.size[0] <= 512:
         front_pil = run_sr_fast([front_pil])[0]
-        front_pil.save("/intermediate/front_pil_sr.png")
+        # front_pil.save("/intermediate/front_pil_sr.png")
     if do_refine:
         print("Refining RGB images...")
         refine_start_time = time.time()
         refined_rgbs = refine_rgb(rgb_pils, front_pil)  # 6s
-        for i, rgb in enumerate(refined_rgbs):
-            rgb.save(f"/intermediate/refined_rgb_{i}.png")
+        # for i, rgb in enumerate(refined_rgbs):
+            # rgb.save(f"/intermediate/refined_rgb_{i}.png")
         refine_end_time = time.time()
         print(f"Refining RGB images took {refine_end_time - refine_start_time:.2f} seconds")
     else:
         refined_rgbs = [rgb.resize((512, 512), resample=Image.LANCZOS) for rgb in rgb_pils]
-        for i, rgb in enumerate(refined_rgbs):
-            rgb.save(f"/intermediate/resized_rgb_{i}.png")
+        # for i, rgb in enumerate(refined_rgbs):
+        #     rgb.save(f"/intermediate/resized_rgb_{i}.png")
     img_list = [front_pil] + run_sr_fast(refined_rgbs[1:])
-    for i, img in enumerate(img_list):
-        img.save(f"/intermediate/img_list_{i}.png")
+    # for i, img in enumerate(img_list):
+    #     img.save(f"/intermediate/img_list_{i}.png")
     
     if predict_normal:
         print("Predicting normals...")
         predict_normal_start_time = time.time()
         rm_normals = predict_normals([img.resize((512, 512), resample=Image.LANCZOS) for img in img_list], guidance_scale=1.5)
-        for i, img in enumerate(rm_normals):
-            img.save(f"/intermediate/rm_normal_{i}.png")
+        # for i, img in enumerate(rm_normals):
+        #     img.save(f"/intermediate/rm_normal_{i}.png")
         predict_normal_end_time = time.time()
         print(f"Predicting normals took {predict_normal_end_time - predict_normal_start_time:.2f} seconds")
     else:
         rm_normals = simple_remove([img.resize((512, 512), resample=Image.LANCZOS) for img in normal_pils])
-        for i, img in enumerate(rm_normals):
-            img.save(f"/intermediate/simple_remove_{i}.png")
+        # for i, img in enumerate(rm_normals):
+        #     img.save(f"/intermediate/simple_remove_{i}.png")
     # transfer the alpha channel of rm_normals to img_list
     for idx, img in enumerate(rm_normals):
         if idx == 0 and img_list[0].mode == "RGBA":
