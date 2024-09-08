@@ -22,6 +22,7 @@ def load_onnx(file_path: str):
     print("Loading ONNX model from", file_path)
     print("Using providers:", providers)
     ort_session = onnxruntime.InferenceSession(file_path, sess_opt=sess_opt, providers=providers)
+    print("ONNX model loaded successfully")
     return ort_session
 
 

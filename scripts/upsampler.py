@@ -39,20 +39,29 @@ class RealESRGANer():
         self.mod_scale = None
         self.half = half
 
+        print(f"Initializing RealESRGANer with scale={scale}, tile_size={tile}, tile_pad={tile_pad}, pre_pad={pre_pad}, half={half}")
+
         # initialize model
         if gpu_id:
             self.device = torch.device(
                 f'cuda:{gpu_id}' if torch.cuda.is_available() else 'cpu') if device is None else device
         else:
             self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
+        print(f"Using device: {self.device}")
+
         self.model = load_onnx_caller(onnx_path, single_output=True)
+        print(f"Loaded ONNX model from {onnx_path}")
+
         # warm up
-        sample_input = torch.randn(1,3,512,512).cuda().float()
+        sample_input = torch.randn(1,3,512,512).to(self.device).float()
+        print("Warming up model...")
         self.model(sample_input)
+        print("Model warmed up")
 
     def pre_process(self, img):
         """Pre-process, such as pre-pad and mod pad, so that the images can be divisible
         """
+        print("Pre-processing input image...")
         img = torch.from_numpy(np.transpose(img, (2, 0, 1))).float()
         self.img = img.unsqueeze(0).to(self.device)
         if self.half:
@@ -60,6 +69,7 @@ class RealESRGANer():
 
         # pre_pad
         if self.pre_pad != 0:
+            print(f"Applying pre-padding of {self.pre_pad} pixels...")
             self.img = F.pad(self.img, (0, self.pre_pad, 0, self.pre_pad), 'reflect')
         # mod pad for divisible borders
         if self.scale == 2:
@@ -73,10 +83,13 @@ class RealESRGANer():
                 self.mod_pad_h = (self.mod_scale - h % self.mod_scale)
             if (w % self.mod_scale != 0):
                 self.mod_pad_w = (self.mod_scale - w % self.mod_scale)
-            self.img = F.pad(self.img, (0, self.mod_pad_w, 0, self.mod_pad_h), 'reflect')
+            if self.mod_pad_h != 0 or self.mod_pad_w != 0:
+                print(f"Applying mod padding of {self.mod_pad_h} rows and {self.mod_pad_w} columns...")
+                self.img = F.pad(self.img, (0, self.mod_pad_w, 0, self.mod_pad_h), 'reflect')
 
     def process(self):
         # model inference
+        print("Running model inference...")
         self.output = self.model(self.img)
 
     def tile_process(self):
@@ -85,6 +98,7 @@ class RealESRGANer():
 
         Modified from: https://github.com/ata4/esrgan-launcher
         """
+        print("Processing image in tiles...")
         batch, channel, height, width = self.img.shape
         output_height = height * self.scale
         output_width = width * self.scale
@@ -149,14 +163,17 @@ class RealESRGANer():
         if self.mod_scale is not None:
             _, _, h, w = self.output.size()
             self.output = self.output[:, :, 0:h - self.mod_pad_h * self.scale, 0:w - self.mod_pad_w * self.scale]
+            print(f"Removing mod padding of {self.mod_pad_h * self.scale} rows and {self.mod_pad_w * self.scale} columns...")
         # remove prepad
         if self.pre_pad != 0:
             _, _, h, w = self.output.size()
             self.output = self.output[:, :, 0:h - self.pre_pad * self.scale, 0:w - self.pre_pad * self.scale]
+            print(f"Removing pre-padding of {self.pre_pad * self.scale} pixels...")
         return self.output
 
     @torch.no_grad()
     def enhance(self, img, outscale=None, alpha_upsampler='realesrgan'):
+        print('\tUpsampling...')
         h_input, w_input = img.shape[0:2]
         # img: numpy
         img = img.astype(np.float32)
@@ -195,6 +212,7 @@ class RealESRGANer():
         # ------------------- process the alpha channel if necessary ------------------- #
         if img_mode == 'RGBA':
             if alpha_upsampler == 'realesrgan':
+                print("\tUpsampling alpha channel with RealESRGAN...")
                 self.pre_process(alpha)
                 if self.tile_size > 0:
                     self.tile_process()
@@ -205,6 +223,7 @@ class RealESRGANer():
                 output_alpha = np.transpose(output_alpha[[2, 1, 0], :, :], (1, 2, 0))
                 output_alpha = cv2.cvtColor(output_alpha, cv2.COLOR_BGR2GRAY)
             else:  # use the cv2 resize for alpha channel
+                print("\tUpsampling alpha channel with cv2.resize...")
                 h, w = alpha.shape[0:2]
                 output_alpha = cv2.resize(alpha, (w * self.scale, h * self.scale), interpolation=cv2.INTER_LINEAR)
 
@@ -219,6 +238,7 @@ class RealESRGANer():
             output = (output_img * 255.0).round().astype(np.uint8)
 
         if outscale is not None and outscale != float(self.scale):
+            print(f"Resizing output to scale {outscale}...")
             output = cv2.resize(
                 output, (
                     int(w_input * outscale),
@@ -226,4 +246,3 @@ class RealESRGANer():
                 ), interpolation=cv2.INTER_LANCZOS4)
 
         return output, img_mode
-
