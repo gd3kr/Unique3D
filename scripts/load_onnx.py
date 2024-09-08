@@ -4,9 +4,9 @@ import torch
 providers = [
     ('TensorrtExecutionProvider', {
         'device_id': 0,
-        'trt_max_workspace_size': 8 * 1024 * 1024 * 1024,
-        'trt_fp16_enable': True,
-        'trt_engine_cache_enable': True,
+        'trt_max_workspace_size': 12 * 1024 * 1024 * 1024,
+        'trt_fp16_enable': False,
+        'trt_engine_cache_enable': False,
     }),
     ('CUDAExecutionProvider', {
         'device_id': 0,
