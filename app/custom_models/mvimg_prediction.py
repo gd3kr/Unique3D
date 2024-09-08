@@ -21,7 +21,17 @@ trainer, pipeline = load_pipeline(training_config, checkpoint_path)
 
 # merge delta weights into unet
 delta_weights = UNet2DConditionModel.from_pretrained("hansyan/perflow-sd15-delta-weights", torch_dtype=torch.bfloat16, variant="v0-1",).state_dict()
-pipeline = merge_delta_weights_into_unet(pipeline, delta_weights)
+# pipeline = merge_delta_weights_into_unet(pipeline, delta_weights)
+
+unet_weights = pipeline.unet.state_dict()
+# assert unet_weights.keys() == delta_weights.keys()
+for key in delta_weights.keys():
+    print(key)
+    dtype = unet_weights[key].dtype
+    unet_weights[key] = unet_weights[key].to(dtype=delta_weights[key].dtype) + delta_weights[key].to(device=unet_weights[key].device)
+    unet_weights[key] = unet_weights[key].to(dtype)
+pipeline.unet.load_state_dict(unet_weights, strict=True)
+
 pipeline.scheduler = PeRFlowScheduler.from_config(pipeline.scheduler.config, prediction_type="diff_eps", num_time_windows=4)
 
 
