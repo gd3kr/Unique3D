@@ -96,7 +96,7 @@ import numpy as np
     
 #     return ret_pils
 
-def run_sr_fast(source_pils, scale=4):
+def run_sr_fast(source_pils, scale=6):
     import numpy as np
     from PIL import Image
 

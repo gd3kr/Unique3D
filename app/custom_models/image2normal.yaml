@@ -52,8 +52,8 @@ trainers:
           enable_self_attn_lora: False
           enable_self_attn_ref: True
           enable_multiview_attn: False
-        resolution: "1024"
-        condition_image_resolution: "1024"
+        resolution: "512"
+        condition_image_resolution: "512"
         condition_image_column_name: "conditioning_image"
         image_column_name: "image"
 
