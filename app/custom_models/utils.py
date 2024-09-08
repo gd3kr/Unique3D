@@ -4,11 +4,14 @@ from dataclasses import dataclass
 from app.utils import rgba_to_rgb
 from custum_3d_diffusion.trainings.config_classes import ExprimentConfig, TrainerSubConfig
 from custum_3d_diffusion import modules
-from custum_3d_diffusion.custum_modules.unifield_processor import AttnConfig, ConfigurableUNet2DConditionModel
+from custum_3d_diffusion.custum_modules.unifield_processor import AttnConfig, ConfigurableUNet2DConditionModel, UNet2DConditionModel
 from custum_3d_diffusion.trainings.base import BasicTrainer
 from custum_3d_diffusion.trainings.utils import load_config
 # from sfast.compilers.diffusion_pipeline_compiler import (compile,
 #                                                          CompilationConfig)
+
+from perflow.src.utils_perflow import merge_delta_weights_into_unet
+from perflow.src.scheduler_perflow import PeRFlowScheduler
 
 
 @dataclass
@@ -51,6 +54,9 @@ def process_text(trainer, pipeline, img, guidance_scale=2.):
 
 
 def load_pipeline(config_path, ckpt_path, pipeline_filter=lambda x: True, weight_dtype = torch.bfloat16):
+    # print what is loading
+    print(f"loading pipeline from {config_path} and {ckpt_path}")
+
     training_config = config_path
     load_from_checkpoint = ckpt_path
     extras = []
@@ -64,6 +70,8 @@ def load_pipeline(config_path, ckpt_path, pipeline_filter=lambda x: True, weight
         state_dict = torch.load(load_from_checkpoint)
         configurable_unet.unet.load_state_dict(state_dict, strict=False)
     # Move unet, vae and text_encoder to device and cast to weight_dtype
+
+
     configurable_unet.unet.to(device, dtype=weight_dtype)
 
     pipeline = None
@@ -73,6 +81,14 @@ def load_pipeline(config_path, ckpt_path, pipeline_filter=lambda x: True, weight
             pipeline = trainer.construct_pipeline(shared_modules, configurable_unet.unet)
             pipeline.set_progress_bar_config(disable=False)
             trainer_out = trainer
+
+
+    print("loading delta weights...")
+    delta_weights = UNet2DConditionModel.from_pretrained("hansyan/perflow-sd15-delta-weights", torch_dtype=torch.float16, variant="v0-1",).state_dict()
+    print("delta weights loaded...")
+
+    pipeline = merge_delta_weights_into_unet(pipeline, delta_weights)
+    pipeline.scheduler = PeRFlowScheduler.from_config(pipeline.scheduler.config, prediction_type="diff_eps", num_time_windows=4)
 
     pipeline = pipeline.to(device, dtype=weight_dtype)
 
