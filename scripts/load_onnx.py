@@ -1,5 +1,8 @@
 import onnxruntime
 import torch
+import subprocess
+import threading
+import time
 
 providers = [
     ('TensorrtExecutionProvider', {
@@ -16,15 +19,38 @@ providers = [
     })
 ]
 
+def run_nvidia_smi():
+    result = subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, text=True)
+    print(result.stdout)
+
+def periodic_nvidia_smi(stop_event):
+    while not stop_event.is_set():
+        run_nvidia_smi()
+        time.sleep(60)  # Run every 60 seconds
+
 def load_onnx(file_path: str):
     assert file_path.endswith(".onnx")
     sess_opt = onnxruntime.SessionOptions()
     print("Loading ONNX model from", file_path)
     print("Using providers:", providers)
-    ort_session = onnxruntime.InferenceSession(file_path, sess_opt=sess_opt, providers=providers)
-    print("ONNX model loaded successfully")
-    return ort_session
 
+    # Start GPU monitoring
+    stop_event = threading.Event()
+    monitor_thread = threading.Thread(target=periodic_nvidia_smi, args=(stop_event,))
+    monitor_thread.start()
+
+    try:
+        ort_session = onnxruntime.InferenceSession(file_path, sess_opt=sess_opt, providers=providers)
+        print("ONNX model loaded successfully")
+    finally:
+        # Stop GPU monitoring
+        stop_event.set()
+        monitor_thread.join()
+
+    # Run nvidia-smi one last time after loading
+    run_nvidia_smi()
+
+    return ort_session
 
 def load_onnx_caller(file_path: str, single_output=False):
     ort_session = load_onnx(file_path)
