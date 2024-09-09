@@ -27,6 +27,8 @@ def remove_color(arr):
     return arr
 
 def simple_remove(imgs, run_sr=True):
+    from app.all_models import model_zoo
+
     """Only works for normal"""
     if not isinstance(imgs, list):
         imgs = [imgs]
@@ -35,7 +37,8 @@ def simple_remove(imgs, run_sr=True):
         single_input = False
     if run_sr:
         # imgs = run_sr_fast(imgs)
-        imgs=run_sr_sd(imgs)
+        pipe = model_zoo.perflow_pipe_refine_model.to("cuda")
+        imgs=run_sr_sd(imgs, pipe=pipe)
     rets = []
     for img in imgs:
         arr = np.array(img)

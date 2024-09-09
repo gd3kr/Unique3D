@@ -43,7 +43,8 @@ def refine_rgb(rgb_pils, front_pil):
     prompt = "4views, multiview"
     neg_prompt = NEG_PROMPT
     control_image = rgb_pil.resize((1024, 1024))
-    refined_rgb = run_sr_sd([rgb_pil], scale=2)[0]
+    pipe = model_zoo.perflow_pipe_refine_model.to("cuda")
+    refined_rgb = run_sr_sd([rgb_pil], pipe=pipe, scale=2)[0]
     # pipe = model_zoo.pipe_disney_controlnet_tile_ipadapter_i2i.to("cuda")
     # refined_rgb = refine_lr_with_sd([rgb_pil], [rgba_to_rgb(front_pil)], [control_image], prompt_list=[prompt], neg_prompt_list=[neg_prompt], pipe=pipe, strength=0.2, output_size=(1024, 1024))[0]
     refined_rgbs = split_image(refined_rgb, rows=2)
@@ -64,6 +65,7 @@ def erode_alpha(img_list):
 import time
 def geo_reconstruct(rgb_pils, normal_pils, front_pil, do_refine=False, predict_normal=True, expansion_weight=0.1, init_type="std"):
     import os
+    from app.all_models import model_zoo
     os.makedirs("/intermediate", exist_ok=True)
 
     start_time = time.time()
@@ -89,7 +91,8 @@ def geo_reconstruct(rgb_pils, normal_pils, front_pil, do_refine=False, predict_n
         # for i, rgb in enumerate(refined_rgbs):
         #     rgb.save(f"/intermediate/resized_rgb_{i}.png")
     # img_list = [front_pil] + run_sr_fast(refined_rgbs[1:])
-    img_list = [front_pil] + run_sr_sd(refined_rgbs[1:])
+    pipe = model_zoo.perflow_pipe_refine_model.to("cuda")
+    img_list = [front_pil] + run_sr_sd(refined_rgbs[1:], pipe=pipe)
     print(f"img_list shapes: {[img.size for img in img_list]}")
     # for i, img in enumerate(img_list):
     #     img.save(f"/intermediate/img_list_{i}.png")

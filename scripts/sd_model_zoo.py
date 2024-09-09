@@ -61,6 +61,8 @@ def load_controlnet(controlnet_path, torch_dtype=torch.float16):
     controlnet = ControlNetModel.from_pretrained(controlnet_path, torch_dtype=torch_dtype)
     return controlnet
 
+
+
 @cache_model
 def load_image_encoder():
     image_encoder = CLIPVisionModelWithProjection.from_pretrained(

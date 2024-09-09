@@ -18,6 +18,10 @@ import time
 from diffusers import StableDiffusionPipeline, ControlNetModel
 from perflow.src.scheduler_perflow import PeRFlowScheduler
 
+# Initialize the global cache
+SD_cache = None
+
+
 def run_sr_sd(source_pils, scale=4, pipe=None, strength=0.35, prompt="best quality", neg_prompt="blur, lowres, bad anatomy, bad hands, cropped, worst quality", controlnet_conditioning_scale=1.0):
     global SD_cache
 
@@ -85,8 +89,6 @@ def run_sr_sd(source_pils, scale=4, pipe=None, strength=0.35, prompt="best quali
     print(f"SD upscaling took {time.time() - start:.2f} seconds")
     return ret_pils
 
-# Initialize the global cache
-SD_cache = None
 
 def resize_for_condition_image(input_image: Image.Image, resolution: int):
     input_image = input_image.convert("RGB")
