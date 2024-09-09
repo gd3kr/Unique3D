@@ -124,8 +124,8 @@ def run_mvprediction(input_image: Image.Image, remove_bg=True, guidance_scale=1.
         single_image,
         generator=generator,
         guidance_scale=guidance_scale,
-        width=256,
-        height=256,
+        width=512,
+        height=512,
         num_inference_steps=6,
     )
 
