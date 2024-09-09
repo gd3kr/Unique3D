@@ -14,16 +14,13 @@ from perflow.src.scheduler_perflow import PeRFlowScheduler
 from diffusers import UNet2DConditionModel
 
 
-
 def merge_delta_weights_into_unet(pipe, delta_weights):
     unet_weights = pipe.unet.state_dict()
     
-    # Check for missing keys
     missing_keys = set(delta_weights.keys()) - set(unet_weights.keys())
     if missing_keys:
         print(f"Warning: Keys in delta_weights but not in unet_weights: {missing_keys}")
     
-    # Check for extra keys in unet_weights
     extra_keys = set(unet_weights.keys()) - set(delta_weights.keys())
     if extra_keys:
         print(f"Warning: Keys in unet_weights but not in delta_weights: {extra_keys}")
@@ -39,10 +36,11 @@ def merge_delta_weights_into_unet(pipe, delta_weights):
         
         dtype = unet_weights[key].dtype
         try:
-            unet_weights[key] = (
-                unet_weights[key].to(dtype=delta_weights[key].dtype) + 
-                delta_weights[key].to(device=unet_weights[key].device)
-            )
+            if unet_weights[key].shape != delta_weights[key].shape:
+                unet_weights[key] = partial_update(unet_weights[key], delta_weights[key])
+            else:
+                unet_weights[key] = unet_weights[key].to(dtype=delta_weights[key].dtype) + delta_weights[key].to(device=unet_weights[key].device)
+            
             unet_weights[key] = unet_weights[key].to(dtype)
         except RuntimeError as e:
             print(f"Error occurred for key: {key}")
@@ -58,6 +56,23 @@ def merge_delta_weights_into_unet(pipe, delta_weights):
         raise
     
     return pipe
+
+def partial_update(unet_weight, delta_weight):
+    # Convert both tensors to the same dtype and device
+    delta_weight = delta_weight.to(dtype=unet_weight.dtype, device=unet_weight.device)
+    
+    # Create a mask of the same shape as unet_weight, initialized with zeros
+    mask = torch.zeros_like(unet_weight)
+    
+    # Set the mask to 1 for all dimensions that exist in delta_weight
+    slices = tuple(slice(0, min(unet_dim, delta_dim)) for unet_dim, delta_dim in zip(unet_weight.shape, delta_weight.shape))
+    mask[slices] = 1
+    
+    # Apply the delta only where the mask is 1
+    updated_weight = unet_weight.clone()
+    updated_weight[slices] += delta_weight[slices]
+    
+    return updated_weight
 
 training_config = "app/custom_models/image2mvimage.yaml"
 checkpoint_path = "ckpt/img2mvimg/unet_state_dict.pth"
