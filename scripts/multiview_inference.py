@@ -66,22 +66,29 @@ def geo_reconstruct(rgb_pils, normal_pils, front_pil, do_refine=False, predict_n
     os.makedirs("/intermediate", exist_ok=True)
 
     start_time = time.time()
+    print(f"Input front_pil shape: {front_pil.size}")
     if front_pil.size[0] <= 512:
         front_pil = run_sr_fast([front_pil])[0]
+        print(f"After SR, front_pil shape: {front_pil.size}")
         # front_pil.save("/intermediate/front_pil_sr.png")
     if do_refine:
         print("Refining RGB images...")
         refine_start_time = time.time()
         refined_rgbs = refine_rgb(rgb_pils, front_pil)  # 6s
+        print(f"Input rgb_pils shapes: {[rgb.size for rgb in rgb_pils]}")
+        print(f"Refined rgb_pils shapes: {[rgb.size for rgb in refined_rgbs]}")
         # for i, rgb in enumerate(refined_rgbs):
             # rgb.save(f"/intermediate/refined_rgb_{i}.png")
         refine_end_time = time.time()
         print(f"Refining RGB images took {refine_end_time - refine_start_time:.2f} seconds")
     else:
         refined_rgbs = [rgb.resize((512, 512), resample=Image.LANCZOS) for rgb in rgb_pils]
+        print(f"Input rgb_pils shapes: {[rgb.size for rgb in rgb_pils]}")
+        print(f"Resized rgb_pils shapes: {[rgb.size for rgb in refined_rgbs]}")
         # for i, rgb in enumerate(refined_rgbs):
         #     rgb.save(f"/intermediate/resized_rgb_{i}.png")
     img_list = [front_pil] + run_sr_fast(refined_rgbs[1:])
+    print(f"img_list shapes: {[img.size for img in img_list]}")
     # for i, img in enumerate(img_list):
     #     img.save(f"/intermediate/img_list_{i}.png")
     
@@ -89,6 +96,8 @@ def geo_reconstruct(rgb_pils, normal_pils, front_pil, do_refine=False, predict_n
         print("Predicting normals...")
         predict_normal_start_time = time.time()
         rm_normals = predict_normals([img.resize((512, 512), resample=Image.LANCZOS) for img in img_list], guidance_scale=1.5)
+        print(f"Input img_list shapes for normal prediction: {[img.size for img in img_list]}")
+        print(f"Predicted rm_normals shapes: {[img.size for img in rm_normals]}")
         # for i, img in enumerate(rm_normals):
         #     img.save(f"/intermediate/rm_normal_{i}.png")
         predict_normal_end_time = time.time()
