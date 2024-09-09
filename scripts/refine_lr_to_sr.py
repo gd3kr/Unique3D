@@ -9,6 +9,94 @@ def hash_img(img):
 def hash_any(obj):
     return md5(str(obj).encode()).hexdigest()
 
+
+
+import torch
+from PIL import Image
+import numpy as np
+import time
+from diffusers import StableDiffusionPipeline, ControlNetModel
+from perflow.src.scheduler_perflow import PeRFlowScheduler
+
+def run_sr_sd(source_pils, scale=4, pipe=None, strength=0.35, prompt="best quality", neg_prompt="blur, lowres, bad anatomy, bad hands, cropped, worst quality", controlnet_conditioning_scale=1.0):
+    global SD_cache
+
+    if SD_cache is not None and pipe is None:
+        pipe = SD_cache
+    elif pipe is None:
+        # Initialize the Stable Diffusion pipeline with the refiner
+        controlnet = ControlNetModel.from_pretrained(
+            "perflow/pretrained/control_v11f1e_sd15_tile",
+            torch_dtype=torch.float16
+        )
+        
+        pipe = StableDiffusionPipeline.from_pretrained(
+            "hansyan/perflow-sd15-dreamshaper",
+            torch_dtype=torch.float16,
+            custom_pipeline="stable_diffusion_controlnet_img2img",
+            controlnet=controlnet,
+        )
+        
+        pipe.scheduler = PeRFlowScheduler.from_config(
+            pipe.scheduler.config, prediction_type="epsilon", num_time_windows=4
+        )
+        pipe = pipe.to("cuda")
+
+    ret_pils = []
+    start = time.time()
+
+    for idx, img_pil in enumerate(source_pils):
+        np_in = isinstance(img_pil, np.ndarray)
+        if np_in:
+            img_pil = Image.fromarray(img_pil)
+
+        # Calculate new dimensions
+        width, height = img_pil.size
+        new_width, new_height = width * scale, height * scale
+
+        # Resize the input image for conditioning
+        condition_image = resize_for_condition_image(img_pil, max(new_width, new_height))
+
+        # Upscale the image
+        with torch.no_grad():
+            output = pipe(
+                prompt=prompt,
+                negative_prompt=neg_prompt,
+                image=condition_image,
+                controlnet_conditioning_image=condition_image,
+                width=condition_image.size[0],
+                height=condition_image.size[1],
+                strength=strength,
+                num_inference_steps=4,
+                generator=torch.manual_seed(233),
+                controlnet_conditioning_scale=controlnet_conditioning_scale,
+            ).images[0]
+
+        if np_in:
+            ret_pils.append(np.array(output))
+        else:
+            ret_pils.append(output)
+
+    if SD_cache is None:
+        SD_cache = pipe
+
+    print(f"SD upscaling took {time.time() - start:.2f} seconds")
+    return ret_pils
+
+# Initialize the global cache
+SD_cache = None
+
+def resize_for_condition_image(input_image: Image.Image, resolution: int):
+    input_image = input_image.convert("RGB")
+    W, H = input_image.size
+    k = float(resolution) / min(H, W)
+    H *= k
+    W *= k
+    H = int(round(H / 64.0)) * 64
+    W = int(round(W / 64.0)) * 64
+    img = input_image.resize((W, H), resample=Image.LANCZOS)
+    return img
+
 def refine_lr_with_sd(pil_image_list, concept_img_list, control_image_list, prompt_list, pipe=None, strength=0.35, neg_prompt_list="", output_size=(512, 512), controlnet_conditioning_scale=1.):
     print("Refining images using SD")
     start = time.time()

@@ -2,7 +2,7 @@ import os
 from PIL import Image
 from scripts.mesh_init import build_mesh, calc_w_over_h, fix_border_with_pymeshlab_fast
 from scripts.project_mesh import multiview_color_projection
-from scripts.refine_lr_to_sr import run_sr_fast
+from scripts.refine_lr_to_sr import run_sr_fast, run_sr_sd
 from scripts.utils import simple_clean_mesh
 from app.utils import simple_remove, split_image
 from app.custom_models.normal_prediction import predict_normals
@@ -87,7 +87,8 @@ def geo_reconstruct(rgb_pils, normal_pils, front_pil, do_refine=False, predict_n
         print(f"Resized rgb_pils shapes: {[rgb.size for rgb in refined_rgbs]}")
         # for i, rgb in enumerate(refined_rgbs):
         #     rgb.save(f"/intermediate/resized_rgb_{i}.png")
-    img_list = [front_pil] + run_sr_fast(refined_rgbs[1:])
+    # img_list = [front_pil] + run_sr_fast(refined_rgbs[1:])
+    img_list = [front_pil] + run_sr_sd(refined_rgbs[1:])
     print(f"img_list shapes: {[img.size for img in img_list]}")
     # for i, img in enumerate(img_list):
     #     img.save(f"/intermediate/img_list_{i}.png")
