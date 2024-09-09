@@ -26,7 +26,7 @@ def run_sr_sd(source_pils, scale=4, pipe=None, strength=0.35, prompt="best quali
     elif pipe is None:
         # Initialize the Stable Diffusion pipeline with the refiner
         controlnet = ControlNetModel.from_pretrained(
-            "perflow/pretrained/control_v11f1e_sd15_tile",
+            "/root/Unique3D/perflow/control_v11f1e_sd15_tile/",
             torch_dtype=torch.float16
         )
         
