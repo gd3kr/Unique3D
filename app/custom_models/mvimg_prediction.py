@@ -127,7 +127,7 @@ def run_mvprediction(input_image: Image.Image, remove_bg=True, guidance_scale=1.
         width=256,
         height=256,
         num_inference_steps=6,
-        disable_safety_checker=True,
+        # disable_safety_checker=True,
     )
 
     return rgb_pils, single_image
