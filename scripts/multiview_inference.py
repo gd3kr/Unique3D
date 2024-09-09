@@ -43,8 +43,9 @@ def refine_rgb(rgb_pils, front_pil):
     prompt = "4views, multiview"
     neg_prompt = NEG_PROMPT
     control_image = rgb_pil.resize((1024, 1024))
-    pipe = model_zoo.pipe_disney_controlnet_tile_ipadapter_i2i.to("cuda")
-    refined_rgb = refine_lr_with_sd([rgb_pil], [rgba_to_rgb(front_pil)], [control_image], prompt_list=[prompt], neg_prompt_list=[neg_prompt], pipe=pipe, strength=0.2, output_size=(1024, 1024))[0]
+    refined_rgb = run_sr_sd([rgb_pil], scale=2)[0]
+    # pipe = model_zoo.pipe_disney_controlnet_tile_ipadapter_i2i.to("cuda")
+    # refined_rgb = refine_lr_with_sd([rgb_pil], [rgba_to_rgb(front_pil)], [control_image], prompt_list=[prompt], neg_prompt_list=[neg_prompt], pipe=pipe, strength=0.2, output_size=(1024, 1024))[0]
     refined_rgbs = split_image(refined_rgb, rows=2)
     return refined_rgbs
 
