@@ -26,24 +26,9 @@ def run_sr_sd(source_pils, scale=4, pipe=None, strength=0.35, prompt="best quali
     elif pipe is None:
         # Initialize the Stable Diffusion pipeline with the refiner
 
-        if not os.path.exists("perflow/control_v11f1e_sd15_tile/"):
-            import urllib.request
-            import tarfile
-
-            print("Downloading ControlNet weights...")
-            url = "https://weights.replicate.delivery/default/piecewise-rectified-flow/control_v11f1e_sd15_tile.tar"
-            filename = "control_v11f1e_sd15_tile.tar"
-            urllib.request.urlretrieve(url, filename)
-
-            print("Extracting ControlNet weights...")
-            with tarfile.open(filename, "r") as tar:
-                tar.extractall("perflow/")
-
-            os.remove(filename)
-            print("ControlNet weights downloaded and extracted.")
-
+       
         controlnet = ControlNetModel.from_pretrained(
-            "perflow/control_v11f1e_sd15_tile/",
+            "/root/Unique3D/perflow/control_v11f1e_sd15_tile/",
             torch_dtype=torch.float16
         )
         
