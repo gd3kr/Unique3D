@@ -40,7 +40,7 @@ def run_sr_sd(source_pils, scale=4, pipe=None, strength=0.35, prompt="best quali
         )
         
         pipe.scheduler = PeRFlowScheduler.from_config(
-            pipe.scheduler.config, prediction_type="epsilon", num_time_windows=4
+            pipe.scheduler.config, prediction_type="ddim_eps", num_time_windows=4
         )
         pipe = pipe.to("cuda")
 
