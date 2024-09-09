@@ -11,7 +11,7 @@ def hash_any(obj):
 
 def refine_lr_with_sd(pil_image_list, concept_img_list, control_image_list, prompt_list, pipe=None, strength=0.35, neg_prompt_list="", output_size=(512, 512), controlnet_conditioning_scale=1.):
     print("Refining images using SD")
-    time = time.time()
+    start = time.time()
     with torch.no_grad():
         images = pipe(
             image=pil_image_list,
@@ -27,7 +27,7 @@ def refine_lr_with_sd(pil_image_list, concept_img_list, control_image_list, prom
             controlnet_conditioning_scale=controlnet_conditioning_scale,
             generator=torch.manual_seed(233),
         ).images
-    print(f"Refining with SD took {time.time() - time:.2f} seconds")
+    print(f"Refining took {time.time() - start:.2f} seconds")
     return images
 
 SR_cache = None
