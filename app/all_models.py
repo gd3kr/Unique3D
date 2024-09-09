@@ -43,11 +43,12 @@ class MyModelZoo:
             pipe.scheduler.config, prediction_type="ddim_eps", num_time_windows=4
         )
 
+        return pipe
 
     
     
     def init_models(self, load_models_onto_gpu=True, enable_sequential_cpu_offload=False):
         self._pipe_disney_controlnet_lineart_ipadapter_i2i = load_common_sd15_pipe(base_model=self.base_model, ip_adapter=True, plus_model=False, controlnet="./ckpt/controlnet-tile",load_model_onto_gpu=load_models_onto_gpu, pipeline_class=StableDiffusionControlNetImg2ImgPipeline, enable_sequential_cpu_offload=enable_sequential_cpu_offload)
-        self.load_perflow_refine_model()
+        self._perflow_refine_model = self.load_perflow_refine_model()
 
 model_zoo = MyModelZoo()
