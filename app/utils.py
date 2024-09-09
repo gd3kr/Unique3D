@@ -5,7 +5,7 @@ import gc
 import numpy as np
 import numpy as np
 from PIL import Image
-from scripts.refine_lr_to_sr import run_sr_fast
+from scripts.refine_lr_to_sr import run_sr_fast, run_sr_sd
 
 GRADIO_CACHE = "/tmp/gradio/"
 
@@ -34,7 +34,8 @@ def simple_remove(imgs, run_sr=True):
     else:
         single_input = False
     if run_sr:
-        imgs = run_sr_fast(imgs)
+        # imgs = run_sr_fast(imgs)
+        imgs=run_sr_sd(imgs)
     rets = []
     for img in imgs:
         arr = np.array(img)
