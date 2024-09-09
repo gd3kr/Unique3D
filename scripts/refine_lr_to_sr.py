@@ -97,13 +97,9 @@ import numpy as np
 #     return ret_pils
 
 def run_sr_fast(source_pils, scale=4):
-    import numpy as np
     from PIL import Image
-
-
-    print("running super resolution on images")
-    # save images to disk
     from scripts.upsampler import RealESRGANer
+    import numpy as np
     global SR_cache
     if SR_cache is not None:
         upsampler = SR_cache
